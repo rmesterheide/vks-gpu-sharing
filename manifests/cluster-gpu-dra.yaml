@@ -1,0 +1,59 @@
+apiVersion: cluster.x-k8s.io/v1beta2
+kind: Cluster
+metadata:
+  name: gpu-dra
+  namespace: <supervisor-namespace>
+spec:
+  clusterNetwork:
+    serviceDomain: cluster.local
+    services:
+      cidrBlocks: ["10.96.0.0/12"]
+    pods:
+      cidrBlocks: ["10.244.0.0/16"]
+  topology:
+    classRef:
+      name: builtin-generic-v3.7.0
+      namespace: vmware-system-vks-public
+    version: v1.36.4+vmware.2-vkr.3
+    controlPlane:
+      replicas: 1
+      metadata:
+        annotations:
+          run.tanzu.vmware.com/resolve-os-image: os-name=ubuntu,os-version=24.04
+    workers:
+      machineDeployments:
+      - class: node-pool
+        name: gpu
+        replicas: 1
+        failureDomain: zone01
+        metadata:
+          annotations:
+            run.tanzu.vmware.com/resolve-os-image: os-name=ubuntu,os-version=24.04
+        rollout:
+          strategy:
+            type: RollingUpdate
+            rollingUpdate:
+              maxSurge: 0
+              maxUnavailable: 1
+        variables:
+          overrides:
+          - name: vmClass
+            value: a5000-passthrough
+          - name: volumes
+            value:
+            - name: containerd
+              mountPath: /var/lib/containerd
+              capacity: 80Gi
+              storageClass: k8s-990pro
+    variables:
+    - name: storageClass
+      value: k8s-990pro
+    - name: vmClass
+      value: best-effort-medium
+    - name: osConfiguration
+      value:
+        trust:
+          additionalTrustedCAs:
+          - caCert:
+              content: |
+                <paste your registry root CA here, or remove the osConfiguration variable>

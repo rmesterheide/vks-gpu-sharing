@@ -1,0 +1,33 @@
+# Two llama.cpp servers in one pod, both referencing the same claim request, so both see the same GPU.
+# The model volume holds a GGUF file (see scripts/dra-share.sh MODE=prep for the Harbor/oras pull job).
+apiVersion: v1
+kind: Pod
+metadata:
+  name: share
+  namespace: dra-test
+spec:
+  restartPolicy: Never
+  volumes:
+  - name: models
+    persistentVolumeClaim:
+      claimName: models
+  resourceClaims:
+  - name: gpu
+    resourceClaimTemplateName: shared-gpu
+  containers:
+  - name: llama-a
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda-b11913
+    command: ["sh", "-c", "exec /app/llama-server --model $(ls /models/*.gguf | head -1) --host 0.0.0.0 --port 8080 --n-gpu-layers 99 --ctx-size 16384 --flash-attn on --reasoning-budget 0 --jinja --metrics"]
+    ports: [{containerPort: 8080}]
+    volumeMounts: [{name: models, mountPath: /models, readOnly: true}]
+    resources:
+      claims: [{name: gpu, request: gpu}]
+    readinessProbe: {httpGet: {path: /health, port: 8080}, initialDelaySeconds: 10, periodSeconds: 5}
+  - name: llama-b
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda-b11913
+    command: ["sh", "-c", "exec /app/llama-server --model $(ls /models/*.gguf | head -1) --host 0.0.0.0 --port 8081 --n-gpu-layers 99 --ctx-size 16384 --flash-attn on --reasoning-budget 0 --jinja --metrics"]
+    ports: [{containerPort: 8081}]
+    volumeMounts: [{name: models, mountPath: /models, readOnly: true}]
+    resources:
+      claims: [{name: gpu, request: gpu}]
+    readinessProbe: {httpGet: {path: /health, port: 8081}, initialDelaySeconds: 10, periodSeconds: 5}

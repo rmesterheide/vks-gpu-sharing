@@ -1,0 +1,309 @@
+
+##### 0. clean start: no leftover test pods  (22:33:43)
+  resourceclaimtemplate.resource.k8s.io "single-gpu" deleted from dra-test namespace
+  No resources found in dra-test namespace.
+
+##### a. wait for the GPU node, the driver and the ResourceSlice (up to 20 min)  (22:33:43)
+  22:33:43 gpucluster=ready slices=1 node=gpu-dra-gpu-qw8z9-wt2nf-x5bsd ready=True ephemeral=18645025966 notready: none
+  attrs: gpu-0: {"addressingMode":{"string":"HMM"},"architecture":{"string":"Ampere"},"brand":{"string":"NvidiaRTX"},"cudaComputeCapability":{"version":"8.6.0"},"cudaDriverVersion":{"version":"13.2.0"},"driverVersion":{"version":"595.91.7"},"productName":{"string":"NVIDIA RTX A5000"},"resource.kubernetes.io/numaNode":{"int":0},"resource.kubernetes.io/pciBusID":{"string":"0000:03:00.0"},"resource.kubernetes.io/pcieRoot":{"string":"pci0000:03"},"type":{"string":"gpu"},"uuid":{"string":"GPU-454cf815-0fee-6670-dfc3-8b1dd963da3e"}}
+
+##### b. test 4: whole GPU through a claim  (22:33:43)
+
+### test 4: one pod, whole GPU through a ResourceClaimTemplate  (22:33:43)
+resourceclaimtemplate.resource.k8s.io/single-gpu created
+pod/smi created
+  22:33:44 pod smi: Pending
+  22:33:54 pod smi: Succeeded
+  CLAIM   STATE   DRIVER
+  Events:
+--- nvidia-smi output
+  Fri Oct 30 21:33:44 2026       
+  +-----------------------------------------------------------------------------------------+
+  | NVIDIA-SMI 595.91.07              Driver Version: 595.91.07      CUDA Version: 13.2     |
+  +-----------------------------------------+------------------------+----------------------+
+  | GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+  | Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+  |                                         |                        |               MIG M. |
+  |=========================================+========================+======================|
+  |   0  NVIDIA RTX A5000               On  |   00000000:03:00.0 Off |                  Off |
+  | 30%   39C    P8             24W /  230W |       1MiB /  24564MiB |      0%      Default |
+  |                                         |                        |                  N/A |
+  +-----------------------------------------+------------------------+----------------------+
+  
+  +-----------------------------------------------------------------------------------------+
+  | Processes:                                                                              |
+  |  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+  |        ID   ID                                                               Usage      |
+  |=========================================================================================|
+  |  No running processes found                                                             |
+  +-----------------------------------------------------------------------------------------+
+  name, driver_version, memory.total [MiB], compute_mode
+  NVIDIA RTX A5000, 595.91.07, 24564 MiB, Default
+  CUDA_VERSION=13.0.1
+  LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64
+  NVIDIA_CTK_LIBCUDA_DIR=/usr/lib/x86_64-linux-gnu
+  NVIDIA_DRIVER_CAPABILITIES=compute,utility
+  NVIDIA_REQUIRE_CUDA=cuda>=13.0 brand=unknown,driver>=535,driver<536 brand=grid,driver>=535,driver<536 brand=tesla,driver>=535,driver<536 brand=nvidia,driver>=535,driver<536 brand=quadro,driver>=535,driver<536 brand=quadrortx,driver>=535,driver<536 brand=nvidiartx,driver>=535,driver<536 brand=vapps,driver>=535,driver<536 brand=vpc,driver>=535,driver<536 brand=vcs,driver>=535,driver<536 brand=vws,driver>=535,driver<536 brand=cloudgaming,driver>=535,driver<536 brand=unknown,driver>=550,driver<551 brand=grid,driver>=550,driver<551 brand=tesla,driver>=550,driver<551 brand=nvidia,driver>=550,driver<551 brand=quadro,driver>=550,driver<551 brand=quadrortx,driver>=550,driver<551 brand=nvidiartx,driver>=550,driver<551 brand=vapps,driver>=550,driver<551 brand=vpc,driver>=550,driver<551 brand=vcs,driver>=550,driver<551 brand=vws,driver>=550,driver<551 brand=cloudgaming,driver>=550,driver<551 brand=unknown,driver>=565,driver<566 brand=grid,driver>=565,driver<566 brand=tesla,driver>=565,driver<566 brand=nvidia,driver>=565,driver<566 brand=quadro,driver>=565,driver<566 brand=quadrortx,driver>=565,driver<566 brand=nvidiartx,driver>=565,driver<566 brand=vapps,driver>=565,driver<566 brand=vpc,driver>=565,driver<566 brand=vcs,driver>=565,driver<566 brand=vws,driver>=565,driver<566 brand=cloudgaming,driver>=565,driver<566 brand=unknown,driver>=570,driver<571 brand=grid,driver>=570,driver<571 brand=tesla,driver>=570,driver<571 brand=nvidia,driver>=570,driver<571 brand=quadro,driver>=570,driver<571 brand=quadrortx,driver>=570,driver<571 brand=nvidiartx,driver>=570,driver<571 brand=vapps,driver>=570,driver<571 brand=vpc,driver>=570,driver<571 brand=vcs,driver>=570,driver<571 brand=vws,driver>=570,driver<571 brand=cloudgaming,driver>=570,driver<571 brand=unknown,driver>=575,driver<576 brand=grid,driver>=575,driver<576 brand=tesla,driver>=575,driver<576 brand=nvidia,driver>=575,driver<576 brand=quadro,driver>=575,driver<576 brand=quadrortx,driver>=575,driver<576 brand=nvidiartx,driver>=575,driver<576 brand=vapps,driver>=575,driver<576 brand=vpc,driver>=575,driver<576 brand=vcs,driver>=575,driver<576 brand=vws,driver>=575,driver<576 brand=cloudgaming,driver>=575,driver<576
+  NVIDIA_VISIBLE_DEVICES=void
+  NV_CUDA_CUDART_VERSION=13.0.88-1
+  PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+done 22:33:54
+
+##### c. control: one container  (22:33:54)
+
+### control: one container, TimeSlicing template  (22:33:54)
+resourceclaimtemplate.resource.k8s.io/shared-gpu created
+pod/share created
+  22:33:55 Pending llama-a=false 
+  22:34:05 Running llama-a=false 
+  22:34:15 Running llama-a=true 
+  Events:
+
+### status  (22:34:15)
+  NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+  persistentvolumeclaim/models   Bound    pvc-2c441416-185a-4066-89dc-0aeae734220f   30Gi       RWO            k8s-990pro     <unset>                 58m   Filesystem
+  
+  NAME                   STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                             SELECTOR
+  job.batch/model-pull   Complete   1/1           36s        30m   oras         ghcr.io/oras-project/oras:v1.3.0   batch.kubernetes.io/controller-uid=aa3223d9-d13f-43e4-a328-58b390775431
+  
+  NAME        READY   STATUS    RESTARTS   AGE   IP            NODE                            NOMINATED NODE   READINESS GATES
+  pod/share   1/1     Running   0          21s   10.244.2.17   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   <none>           <none>
+  claim: share-gpu-sshgk   gpu-0   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   share
+  llama-a: 0.02.487.978 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-a: 0.02.494.730 I srv  server_run_i: model loaded
+  llama-a: 0.02.494.741 I srv  server_on_li: listening on http://0.0.0.0:8080
+
+done 22:34:16
+
+### bench through port-forward (dra-bench.py, PAR=4 TOK=400)  (22:34:16)
+host 127.0.0.1, ports [8080], max_tokens 400, parallel 4
+
+--- 8080 alone
+  port 8080 single stream: TTFT 0.21 s, 399 tokens in 5.5 s, 75.9 tok/s after first token
+  port 8080: 1 parallel, 400 tokens in 5.6 s = 72.0 tok/s aggregate, 72.0 per request
+  port 8080: 4 parallel, 1600 tokens in 7.9 s = 201.6 tok/s aggregate, 50.4 per request
+
+### status  (22:34:38)
+  NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+  persistentvolumeclaim/models   Bound    pvc-2c441416-185a-4066-89dc-0aeae734220f   30Gi       RWO            k8s-990pro     <unset>                 58m   Filesystem
+  
+  NAME                   STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                             SELECTOR
+  job.batch/model-pull   Complete   1/1           36s        30m   oras         ghcr.io/oras-project/oras:v1.3.0   batch.kubernetes.io/controller-uid=aa3223d9-d13f-43e4-a328-58b390775431
+  
+  NAME        READY   STATUS    RESTARTS   AGE   IP            NODE                            NOMINATED NODE   READINESS GATES
+  pod/share   1/1     Running   0          44s   10.244.2.17   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   <none>           <none>
+  claim: share-gpu-sshgk   gpu-0   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   share
+  llama-a: 0.38.112.954 I slot print_timing: id  3 | task 809 |    graphs reused =       1187
+  llama-a: 0.38.112.954 I slot print_timing: id  3 | task 809 |   graph reallocs =          0    /     0        (same size) / (changed size)
+  llama-a: 0.38.112.969 I slot      release: id  3 | task 809 | stop processing: n_tokens = 481, truncated = 0
+
+done 22:34:39
+
+##### d1. test 5: TimeSlicing Default, two containers  (22:34:39)
+
+### test 5: TimeSlicing interval Default, two containers  (22:34:39)
+resourceclaimtemplate.resource.k8s.io/shared-gpu created
+pod/share created
+  22:34:41 Pending llama-a=false llama-b=false 
+  22:34:51 Pending llama-a=false llama-b=false 
+  22:35:01 Running llama-a=false llama-b=false 
+  22:35:12 Running llama-a=true llama-b=true 
+
+### status  (22:35:12)
+  NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+  persistentvolumeclaim/models   Bound    pvc-2c441416-185a-4066-89dc-0aeae734220f   30Gi       RWO            k8s-990pro     <unset>                 59m   Filesystem
+  
+  NAME                   STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                             SELECTOR
+  job.batch/model-pull   Complete   1/1           36s        31m   oras         ghcr.io/oras-project/oras:v1.3.0   batch.kubernetes.io/controller-uid=aa3223d9-d13f-43e4-a328-58b390775431
+  
+  NAME        READY   STATUS    RESTARTS   AGE   IP            NODE                            NOMINATED NODE   READINESS GATES
+  pod/share   2/2     Running   0          32s   10.244.2.18   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   <none>           <none>
+  claim: share-gpu-cbst6   gpu-0   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   share
+  llama-a: 0.02.990.947 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-a: 0.02.997.886 I srv  server_run_i: model loaded
+  llama-a: 0.02.997.909 I srv  server_on_li: listening on http://0.0.0.0:8080
+  llama-b: 0.02.840.371 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-b: 0.02.847.058 I srv  server_run_i: model loaded
+  llama-b: 0.02.847.068 I srv  server_on_li: listening on http://0.0.0.0:8081
+
+done 22:35:13
+
+### bench through port-forward (dra-bench.py, PAR=4 TOK=400)  (22:35:13)
+host 127.0.0.1, ports [8080, 8081], max_tokens 400, parallel 4
+
+--- 8080 alone
+Traceback (most recent call last):
+http.client.RemoteDisconnected: Remote end closed connection without response
+
+### status  (22:35:16)
+  NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+  persistentvolumeclaim/models   Bound    pvc-2c441416-185a-4066-89dc-0aeae734220f   30Gi       RWO            k8s-990pro     <unset>                 59m   Filesystem
+  
+  NAME                   STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                             SELECTOR
+  job.batch/model-pull   Complete   1/1           36s        31m   oras         ghcr.io/oras-project/oras:v1.3.0   batch.kubernetes.io/controller-uid=aa3223d9-d13f-43e4-a328-58b390775431
+  
+  NAME        READY   STATUS    RESTARTS   AGE   IP            NODE                            NOMINATED NODE   READINESS GATES
+  pod/share   2/2     Running   0          36s   10.244.2.18   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   <none>           <none>
+  claim: share-gpu-cbst6   gpu-0   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   share
+  llama-a: 0.02.990.947 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-a: 0.02.997.886 I srv  server_run_i: model loaded
+  llama-a: 0.02.997.909 I srv  server_on_li: listening on http://0.0.0.0:8080
+  llama-b: 0.02.840.371 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-b: 0.02.847.058 I srv  server_run_i: model loaded
+  llama-b: 0.02.847.068 I srv  server_on_li: listening on http://0.0.0.0:8081
+
+done 22:35:17
+
+##### d2. test 5: TimeSlicing Long, two containers  (22:35:17)
+
+### test 5: TimeSlicing interval Long, two containers  (22:35:17)
+resourceclaimtemplate.resource.k8s.io/shared-gpu created
+pod/share created
+  22:35:19 Pending llama-a=false llama-b=false 
+  22:35:29 Running llama-a=false llama-b=false 
+  22:35:40 Running llama-a=true llama-b=true 
+  Events:
+
+### status  (22:35:40)
+  NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+  persistentvolumeclaim/models   Bound    pvc-2c441416-185a-4066-89dc-0aeae734220f   30Gi       RWO            k8s-990pro     <unset>                 59m   Filesystem
+  
+  NAME                   STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                             SELECTOR
+  job.batch/model-pull   Complete   1/1           36s        32m   oras         ghcr.io/oras-project/oras:v1.3.0   batch.kubernetes.io/controller-uid=aa3223d9-d13f-43e4-a328-58b390775431
+  
+  NAME        READY   STATUS    RESTARTS   AGE   IP            NODE                            NOMINATED NODE   READINESS GATES
+  pod/share   2/2     Running   0          21s   10.244.2.19   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   <none>           <none>
+  claim: share-gpu-xx646   gpu-0   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   share
+  llama-a: 0.02.952.123 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-a: 0.02.959.020 I srv  server_run_i: model loaded
+  llama-a: 0.02.959.031 I srv  server_on_li: listening on http://0.0.0.0:8080
+  llama-b: 0.02.782.961 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-b: 0.02.789.816 I srv  server_run_i: model loaded
+  llama-b: 0.02.789.827 I srv  server_on_li: listening on http://0.0.0.0:8081
+
+done 22:35:40
+
+### bench through port-forward (dra-bench.py, PAR=4 TOK=400)  (22:35:40)
+host 127.0.0.1, ports [8080, 8081], max_tokens 400, parallel 4
+
+--- 8080 alone
+  port 8080 single stream: TTFT 0.15 s, 399 tokens in 5.5 s, 75.0 tok/s after first token
+  port 8080: 1 parallel, 400 tokens in 5.6 s = 71.7 tok/s aggregate, 71.7 per request
+  port 8080: 4 parallel, 1600 tokens in 8.0 s = 199.2 tok/s aggregate, 49.8 per request
+--- 8081 alone
+Traceback (most recent call last):
+http.client.RemoteDisconnected: Remote end closed connection without response
+
+### status  (22:36:03)
+  NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+  persistentvolumeclaim/models   Bound    pvc-2c441416-185a-4066-89dc-0aeae734220f   30Gi       RWO            k8s-990pro     <unset>                 60m   Filesystem
+  
+  NAME                   STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                             SELECTOR
+  job.batch/model-pull   Complete   1/1           36s        32m   oras         ghcr.io/oras-project/oras:v1.3.0   batch.kubernetes.io/controller-uid=aa3223d9-d13f-43e4-a328-58b390775431
+  
+  NAME        READY   STATUS    RESTARTS   AGE   IP            NODE                            NOMINATED NODE   READINESS GATES
+  pod/share   2/2     Running   0          44s   10.244.2.19   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   <none>           <none>
+  claim: share-gpu-xx646   gpu-0   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   share
+  llama-a: 0.41.008.688 I slot print_timing: id  3 | task 809 |    graphs reused =       1187
+  llama-a: 0.41.008.688 I slot print_timing: id  3 | task 809 |   graph reallocs =          0    /     0        (same size) / (changed size)
+  llama-a: 0.41.008.698 I slot      release: id  3 | task 809 | stop processing: n_tokens = 481, truncated = 0
+  llama-b: 0.02.782.961 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-b: 0.02.789.816 I srv  server_run_i: model loaded
+  llama-b: 0.02.789.827 I srv  server_on_li: listening on http://0.0.0.0:8081
+
+done 22:36:04
+
+##### e. test 6: MPS 50/50, two containers  (22:36:04)
+
+### test 6: MPS 50 percent threads, 10Gi pinned memory each, two containers  (22:36:04)
+resourceclaimtemplate.resource.k8s.io/shared-gpu created
+pod/share created
+  22:36:07 Pending llama-a=false llama-b=false 
+  22:36:17 Running llama-a=false llama-b=false 
+  22:36:28 Running llama-a=false llama-b=false 
+  22:36:38 Running llama-a=true llama-b=true 
+  Events:
+
+### status  (22:36:38)
+  NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+  persistentvolumeclaim/models   Bound    pvc-2c441416-185a-4066-89dc-0aeae734220f   30Gi       RWO            k8s-990pro     <unset>                 60m   Filesystem
+  
+  NAME                   STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                             SELECTOR
+  job.batch/model-pull   Complete   1/1           36s        32m   oras         ghcr.io/oras-project/oras:v1.3.0   batch.kubernetes.io/controller-uid=aa3223d9-d13f-43e4-a328-58b390775431
+  
+  NAME        READY   STATUS    RESTARTS   AGE   IP            NODE                            NOMINATED NODE   READINESS GATES
+  pod/share   2/2     Running   0          32s   10.244.2.21   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   <none>           <none>
+  claim: share-gpu-9dh7l   gpu-0   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   share
+  mps control daemon: mps-control-daemon-fa88989f-56de-4778-b8f3-f8180d567b5d-160cd
+  llama-a: 0.03.064.794 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-a: 0.03.071.527 I srv  server_run_i: model loaded
+  llama-a: 0.03.071.538 I srv  server_on_li: listening on http://0.0.0.0:8080
+  llama-b: 0.02.898.242 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-b: 0.02.905.019 I srv  server_run_i: model loaded
+  llama-b: 0.02.905.029 I srv  server_on_li: listening on http://0.0.0.0:8081
+
+done 22:36:39
+
+### bench through port-forward (dra-bench.py, PAR=4 TOK=400)  (22:36:39)
+host 127.0.0.1, ports [8080, 8081], max_tokens 400, parallel 4
+
+--- 8080 alone
+Traceback (most recent call last):
+http.client.RemoteDisconnected: Remote end closed connection without response
+
+### status  (22:36:42)
+  NAME                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE   VOLUMEMODE
+  persistentvolumeclaim/models   Bound    pvc-2c441416-185a-4066-89dc-0aeae734220f   30Gi       RWO            k8s-990pro     <unset>                 60m   Filesystem
+  
+  NAME                   STATUS     COMPLETIONS   DURATION   AGE   CONTAINERS   IMAGES                             SELECTOR
+  job.batch/model-pull   Complete   1/1           36s        33m   oras         ghcr.io/oras-project/oras:v1.3.0   batch.kubernetes.io/controller-uid=aa3223d9-d13f-43e4-a328-58b390775431
+  
+  NAME        READY   STATUS    RESTARTS   AGE   IP            NODE                            NOMINATED NODE   READINESS GATES
+  pod/share   2/2     Running   0          36s   10.244.2.21   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   <none>           <none>
+  claim: share-gpu-9dh7l   gpu-0   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   share
+  mps control daemon: mps-control-daemon-fa88989f-56de-4778-b8f3-f8180d567b5d-160cd
+  llama-a: 0.03.064.794 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-a: 0.03.071.527 I srv  server_run_i: model loaded
+  llama-a: 0.03.071.538 I srv  server_on_li: listening on http://0.0.0.0:8080
+  llama-b: 0.02.898.242 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 16384, kv_unified = 'true'
+  llama-b: 0.02.905.019 I srv  server_run_i: model loaded
+  llama-b: 0.02.905.029 I srv  server_on_li: listening on http://0.0.0.0:8081
+
+done 22:36:43
+
+##### f. clean up and final status  (22:36:43)
+pod "share" deleted from dra-test namespace
+resourceclaimtemplate.resource.k8s.io "shared-gpu" deleted from dra-test namespace
+
+done 22:36:44
+
+### status  (22:36:44)
+  NAME                            STATUS   ROLES           AGE   VERSION            INTERNAL-IP       EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION             CONTAINER-RUNTIME
+  gpucluster: NAME          STATUS   AGE
+  gpucluster: gpu-cluster   ready    65m
+  cond: Ready=True Reconciled All resources have been successfully reconciled
+  cond: Error=False Ready 
+  driver cr: NAME      STATUS   DEFAULT   AGE
+  driver cr: default   ready    true      2026-10-30T20:31:13Z
+  pod: gpu-operator-7d6cc54bb-429wk 1/1 Running
+  pod: gpu-operator-node-feature-discovery-gc-5656cffc59-v7dn9 1/1 Running
+  pod: gpu-operator-node-feature-discovery-master-584d6f65cb-scjsf 1/1 Running
+  pod: gpu-operator-node-feature-discovery-worker-jbwgs 1/1 Running
+  pod: gpu-operator-node-feature-discovery-worker-wvvdp 1/1 Running
+  pod: mps-control-daemon-fa88989f-56de-4778-b8f3-f8180d567b5d-16mqf28 0/1 Error
+  pod: nvidia-dcgm-exporter-dra-wn7qn 1/1 Running
+  pod: nvidia-dra-driver-kubelet-plugin-xp75l 1/1 Running
+  pod: nvidia-dra-validator-ccf4v 1/1 Running
+  pod: nvidia-gpu-driver-ubuntu24.04-85cc544dcd-kwdnk 1/1 Running
+  NAME                  AGE
+  gpu.nvidia.com        33m
+  mig.nvidia.com        33m
+  vfio.gpu.nvidia.com   33m
+  slice: 00000-gpu.nvidia.com-gpu-dra-gpu-qw8z9-wt2nf-x5bsd-sb685   gpu.nvidia.com   gpu-dra-gpu-qw8z9-wt2nf-x5bsd   gpu-0
+  resourceslices saved to /tmp/gpu-dra-resourceslices.yaml (      57 lines)
+  attrs: gpu-0: {"addressingMode":{"string":"HMM"},"architecture":{"string":"Ampere"},"brand":{"string":"NvidiaRTX"},"cudaComputeCapability":{"version":"8.6.0"},"cudaDriverVersion":{"version":"13.2.0"},"driverVersion":{"version":"595.91.7"},"productName":{"string":"NVIDIA RTX A5000"},"resource.kubernetes.io/numaNode":{"int":0},"resource.kubernetes.io/pciBusID":{"string":"0000:03:00.0"},"resource.kubernetes.io/pcieRoot":{"string":"pci0000:03"},"type":{"string":"gpu"},"uuid":{"string":"GPU-454cf815-0fee-6670-dfc3-8b1dd963da3e"}}
+
+done 22:36:44
+
+done 22:36:44

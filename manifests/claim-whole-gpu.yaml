@@ -1,0 +1,32 @@
+# Test 4: one pod, the whole GPU through a ResourceClaimTemplate (DeviceClass gpu.nvidia.com)
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  name: single-gpu
+  namespace: dra-test
+spec:
+  spec:
+    devices:
+      requests:
+      - name: gpu
+        exactly:
+          deviceClassName: gpu.nvidia.com
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: smi
+  namespace: dra-test
+spec:
+  restartPolicy: Never
+  containers:
+  - name: smi
+    image: nvcr.io/nvidia/cuda:13.0.1-base-ubuntu24.04
+    command: ["sh", "-c", "nvidia-smi"]
+    resources:
+      claims:
+      - name: gpu
+        request: gpu
+  resourceClaims:
+  - name: gpu
+    resourceClaimTemplateName: single-gpu

@@ -1,0 +1,25 @@
+# Test 6: GpuConfig with sharing.strategy MPS (needs the MPSSupport feature gate; sets the GPU to EXCLUSIVE_PROCESS)
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  name: shared-gpu
+  namespace: dra-test
+spec:
+  spec:
+    devices:
+      requests:
+      - name: gpu
+        exactly:
+          deviceClassName: gpu.nvidia.com
+      config:
+      - requests: ["gpu"]
+        opaque:
+          driver: gpu.nvidia.com
+          parameters:
+            apiVersion: resource.nvidia.com/v1beta1
+            kind: GpuConfig
+            sharing:
+              strategy: MPS
+              mpsConfig:
+                defaultActiveThreadPercentage: 50
+                defaultPinnedDeviceMemoryLimit: 10Gi

@@ -1,0 +1,24 @@
+# Test 5: GpuConfig with sharing.strategy TimeSlicing (interval needs the TimeSlicingSettings feature gate)
+apiVersion: resource.k8s.io/v1
+kind: ResourceClaimTemplate
+metadata:
+  name: shared-gpu
+  namespace: dra-test
+spec:
+  spec:
+    devices:
+      requests:
+      - name: gpu
+        exactly:
+          deviceClassName: gpu.nvidia.com
+      config:
+      - requests: ["gpu"]
+        opaque:
+          driver: gpu.nvidia.com
+          parameters:
+            apiVersion: resource.nvidia.com/v1beta1
+            kind: GpuConfig
+            sharing:
+              strategy: TimeSlicing
+              timeSlicingConfig:
+                interval: Default   # Default | Short | Medium | Long
